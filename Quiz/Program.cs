@@ -9,7 +9,16 @@ game.DisplayWelcome();
 // Tworzymy bazę pytań
 game.CreateQuestionDatabase();
 
+// Losuje z bazy jedno pytanie z aktualnej kategorii
+game.DrawQuestionFromCurrentCategory();
 
+
+// Wyświtlanie wylosowanego pytania 
+game.CurrentQuestion.Display();
+
+
+// Pobieranie opowiedzi gracza
+var userAnswer = Console.ReadLine();
 
 
 
