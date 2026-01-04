@@ -8,8 +8,6 @@ public class Question
     public int Category { get; set; }
     public List<Answer> Answers { get; set; } = new List<Answer>();
 
-
-
     public void Display()
     {
         Console.WriteLine();
@@ -19,7 +17,7 @@ public class Question
         Console.WriteLine();
         foreach( var answer in Answers)
         {
-            Console.WriteLine($" {answer.Id}. {answer.Content}");
+            Console.WriteLine($" {answer.Order}. {answer.Content}");
         }
 
         Console.WriteLine();

@@ -1,22 +1,33 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Quiz;
 
 public class Game
 {
+    // Kategorie pytań: 100, 200, 300, 400, 500, 750, 1000
+
+
     // Konstruktor
     public Game()
     {
         CurrentCategory = 100;
+        CurrentCategoryIndex = 0;
     }
 
     // Właściwości
     public List<Question> QuestionDatabase { get; set; }
     public int CurrentCategory { get; set; }
     public Question CurrentQuestion { get; set; }
+    public List<int> AllCategories { get; set; } = [100, 200, 300, 400, 500, 750, 1000];
+    public int CurrentCategoryIndex { get; set; }
+
+    private Random random = new Random();
+
 
     // Metody (funkcje)
     public void DisplayWelcome()
@@ -35,41 +46,97 @@ public class Game
 
     public void CreateQuestionDatabase()
     {
-        // Tworzymy pustą liste pytań
-        QuestionDatabase = new List<Question>();
-        // Dodajemy 2 pytania do bazy (jedno za 100 punktów, drugie za 200 punktów)
-        var p1 = new Question();
-        p1.Id = 1;
-        p1.Category = 100;
-        p1.Content = "Jakiego koloru jest niebo?";
-
-        var a1 = new Answer();
-        a1.Id = 1;
-        a1.Content = "niebieskie";
-        a1.IsCorrect = true;
-        p1.Answers.Add(a1);
-
-        var a2 = new Answer();
-        a2.Id = 2;
-        a2.Content = "zielone";
-        p1.Answers.Add(a2);
-
-        var a3 = new Answer();
-        a3.Id = 3;
-        a3.Content = "czerwone";
-        p1.Answers.Add(a3);
-
-        var a4 = new Answer();
-        a4.Id = 4;
-        a4.Content = "żółte";
-        p1.Answers.Add(a4);
-
-        QuestionDatabase.Add(p1);
+        var path = $"{Directory.GetCurrentDirectory()}\\questions.json";
+        var data = File.ReadAllText(path);
+        QuestionDatabase = JsonConvert.DeserializeObject<List<Question>>(data);
     }
 
     public void DrawQuestionFromCurrentCategory()
     {
-        // niby losujemy pytanie
-        CurrentQuestion = QuestionDatabase[0];
+        // mamy 1144 pytania z kategorii: 100, 200, 300, 400, 500, 750, 1000
+        // musimy wybrać z nich wszystkich tylko te których kategoria równa się CurrentCategory
+        // tworzymy pustą listę pytań z aktualnej kategorii
+        var questionsFromCurrentCategory = new List<Question>();
+        foreach (var question in QuestionDatabase)
+        {
+            if (question.Category == CurrentCategory)
+                questionsFromCurrentCategory.Add(question);
+        }
+
+
+        // teraz losujemy jedno pytanie z listy pytań z aktualnej kategorii: questionsFromCurrentCategory
+        var index = random.Next(0, questionsFromCurrentCategory.Count);
+        
+        
+        var randomedQuestion = questionsFromCurrentCategory[index];
+        randomedQuestion.Answers = randomedQuestion.Answers.OrderBy(a => random.Next()).ToList();
+        var counter = 1;
+        foreach (var answer in randomedQuestion.Answers)
+        {
+            answer.Order = counter;
+            counter++;
+        }
+
+        CurrentQuestion = randomedQuestion;
+    }
+
+    public bool CheckUserAnswer(string answerIdString)
+    {
+        var answerId = int.Parse(answerIdString);
+
+        foreach (var answer in CurrentQuestion.Answers)
+        {
+            if (answer.Order == answerId)
+            {
+                return answer.IsCorrect;
+            }
+        }
+
+        return false;
+    }
+
+    public void FailGameOver()
+    {
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(" Niestety, to była błędna odpowiedź.");
+        Console.WriteLine(" Koniec gry.");
+    }
+
+    public void GoodAnswer()
+    {
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($" Brawo, to jest poprawna odpowiedź. Wygrałeś/aś {CurrentQuestion.Category} pkt");
+        Console.WriteLine(" Gratulacje !!!");
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write(" Wciśnij ENTER, aby zobaczyć następne pytanie ... ");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.ReadLine();
+        Console.Clear();
+    }
+
+    public void Success()
+    {
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($" Brawo, udało Ci się ukończyć cały Quiz!!!. Wygrałeś/aś {CurrentQuestion.Category} pkt");
+        Console.WriteLine(" Gratulacje !!!");
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(" KONIEC GRY");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.ReadLine();
+        Console.Clear();
+    }
+
+    public void IncreaseCategory()
+    {
+        if (CurrentCategoryIndex == 6)
+            return;
+
+        CurrentCategoryIndex++;
+        CurrentCategory = AllCategories[CurrentCategoryIndex];
     }
 }

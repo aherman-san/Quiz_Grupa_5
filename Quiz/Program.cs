@@ -9,17 +9,59 @@ game.DisplayWelcome();
 // Tworzymy bazę pytań
 game.CreateQuestionDatabase();
 
-// Losuje z bazy jedno pytanie z aktualnej kategorii
-game.DrawQuestionFromCurrentCategory();
+while(true)
+{
+    // Losuje z bazy jedno pytanie z aktualnej kategorii
+    game.DrawQuestionFromCurrentCategory();
+
+    // Wyświtlanie wylosowanego pytania 
+    game.CurrentQuestion.Display();
+
+    // Pobieranie opowiedzi gracza
+    // Robimy tak, aby gracz mógł wpisać tylko 1, 2, 3 lub 4
+    var accceptedKeys = new List<string>() { "1", "2", "3", "4" };
+    var userAnswerAsString = Console.ReadLine();
+    while (!accceptedKeys.Contains(userAnswerAsString))
+    {
+        Console.Clear();
+        game.CurrentQuestion.Display();
+        userAnswerAsString = Console.ReadLine();
+    }
 
 
-// Wyświtlanie wylosowanego pytania 
-game.CurrentQuestion.Display();
+    // Sprawdzanie czy odpowiedź jest prawidłowa
+    var isCorrect = game.CheckUserAnswer(userAnswerAsString);
 
 
-// Pobieranie opowiedzi gracza
-var userAnswer = Console.ReadLine();
+    if (isCorrect)
+    {
+        // Dobra odpowiedź
+        game.GoodAnswer();
+        // Sprawdzamy czy to było ostatnie pytanie
+        // Jeżeli kategoria zadanego pytania to 1000, to oznacza, że to było ostatnie pytanie
+        if (game.CurrentQuestion.Category == 1000)
+        {
+            // ostatnie pytanie => KONIEC GRY - WYGRANA
+            game.Success();
+            break;
+        }
+        else
+        {
+            // Podnosimy kategorię o jedną wyżej.
+            game.IncreaseCategory();
+        }
+    }
+    else
+    {
+        // Zła odpowiedź => KONIEC GRY
+        game.FailGameOver();
+        break;
+    }
+}
+
 
 
 
 Console.ReadLine();
+
+
